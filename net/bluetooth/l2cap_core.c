@@ -90,7 +90,6 @@ static int l2cap_answer_move_poll(struct sock *sk);
 static int l2cap_create_cfm(struct hci_chan *chan, u8 status);
 static int l2cap_deaggregate(struct hci_chan *chan, struct l2cap_pinfo *pi);
 static void l2cap_chan_ready(struct sock *sk);
-static void l2cap_conn_del(struct hci_conn *hcon, int err, u8 is_process);
 static u16 l2cap_get_smallest_flushto(struct l2cap_chan_list *l);
 static void l2cap_set_acl_flushto(struct hci_conn *hcon, u16 flush_to);
 
@@ -816,12 +815,15 @@ static inline int l2cap_mode_supported(__u8 mode, __u32 feat_mask)
 void l2cap_send_disconn_req(struct l2cap_conn *conn, struct sock *sk, int err)
 {
 	struct l2cap_disconn_req req;
+	u8 ident;
 
 	if (!conn)
 		return;
 
 	sk->sk_send_head = NULL;
 	skb_queue_purge(TX_QUEUE(sk));
+	ident = l2cap_get_ident(conn);
+	spin_lock_bh(&conn->lock);
 
 	if (l2cap_pi(sk)->mode == L2CAP_MODE_ERTM) {
 		skb_queue_purge(SREJ_QUEUE(sk));
@@ -833,8 +835,17 @@ void l2cap_send_disconn_req(struct l2cap_conn *conn, struct sock *sk, int err)
 
 	req.dcid = cpu_to_le16(l2cap_pi(sk)->dcid);
 	req.scid = cpu_to_le16(l2cap_pi(sk)->scid);
-	l2cap_send_cmd(conn, l2cap_get_ident(conn),
+
+	if (sk->sk_state != BT_CONNECTED && sk->sk_state != BT_CONFIG) {
+		BT_ERR("Avoid to send the disconnect req, As connection is already LOST"
+			"sk = %p sk->sk_state = %d sk->sk_err = %d, err = %d, conn = %p",
+			sk, sk->sk_state, sk->sk_err, err, conn);
+		spin_unlock_bh(&conn->lock);
+		return;
+	}
+	l2cap_send_cmd(conn, ident,
 			L2CAP_DISCONN_REQ, sizeof(req), &req);
+	spin_unlock_bh(&conn->lock);
 
 	sk->sk_state = BT_DISCONN;
 	sk->sk_err = err;
@@ -1185,7 +1196,7 @@ static struct l2cap_conn *l2cap_conn_add(struct hci_conn *hcon, u8 status)
 	return conn;
 }
 
-static void l2cap_conn_del(struct hci_conn *hcon, int err, u8 is_process)
+void l2cap_conn_del(struct hci_conn *hcon, int err, u8 is_process)
 {
 	struct l2cap_conn *conn = hcon->l2cap_data;
 	struct sock *sk;
@@ -1207,14 +1218,11 @@ static void l2cap_conn_del(struct hci_conn *hcon, int err, u8 is_process)
 		if ((conn->hcon == hcon) || (l2cap_pi(sk)->ampcon == hcon)) {
 			next = l2cap_pi(sk)->next_c;
 			if (is_process)
-				lock_sock(sk);
+				bh_lock_sock_nested(sk);
 			else
 				bh_lock_sock(sk);
 			l2cap_chan_del(sk, err);
-			if (is_process)
-				release_sock(sk);
-			else
-				bh_unlock_sock(sk);
+			bh_unlock_sock(sk);
 			l2cap_sock_kill(sk);
 			sk = next;
 		} else

@@ -493,13 +493,15 @@ struct venc_bufferpayload{
 };
 
 struct venc_buffer{
- unsigned char *ptrbuffer;
- unsigned long	sz;
- unsigned long	len;
- unsigned long	offset;
- long long	timestamp;
- unsigned long	flags;
- void	*clientdata;
+  unsigned char *ptrbuffer;
+  unsigned long	sz;
+  unsigned long	len;
+  unsigned long	offset;
+  long long	timestamp;
+  unsigned long	flags;
+  void	*clientdata;
+	unsigned long	metadata_len;
+	unsigned long	metadata_offset;
 };
 
 struct venc_basecfg{
