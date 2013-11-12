@@ -121,21 +121,6 @@ static struct wcnss_pmic_dump wcnss_pmic_reg_dump[] = {
 	{"LVS1", 0x060},
 };
 
-struct wcnss_pmic_dump {
-	char reg_name[10];
-	u16 reg_addr;
-};
-
-static struct wcnss_pmic_dump wcnss_pmic_reg_dump[] = {
-	{"S2", 0x1D8}, /* S2 */
-	{"L4", 0xB4},  /* L4 */
-	{"L10", 0xC0},  /* L10 */
-	{"LVS2", 0x62},   /* LVS2 */
-	{"S4", 0x1E8}, /*S4*/
-	{"LVS7", 0x06C}, /*LVS7*/
-	{"LVS1", 0x060}, /*LVS7*/
-};
-
 #define NVBIN_FILE "wlan/prima/WCNSS_qcom_wlan_nv.bin"
 
 /*

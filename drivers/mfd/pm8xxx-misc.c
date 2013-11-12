@@ -217,41 +217,6 @@ int pm8xxx_read_register(u16 addr, u8 *value)
 }
 EXPORT_SYMBOL_GPL(pm8xxx_read_register);
 
-/**
- * pm8xxx_read_register - Read a PMIC register
- * @addr: PMIC register address
- * @value: Output parameter which gets the value of the register read.
- * RETURNS: an appropriate -ERRNO error value on error, or zero for success.
- */
-int pm8xxx_read_register(u16 addr, u8 *value)
-{
-	struct pm8xxx_misc_chip *chip;
-	unsigned long flags;
-	int rc = 0;
-
-	spin_lock_irqsave(&pm8xxx_misc_chips_lock, flags);
-
-	/* Loop over all attached PMICs and call specific functions for them. */
-	list_for_each_entry(chip, &pm8xxx_misc_chips, link) {
-		switch (chip->version) {
-		case PM8XXX_VERSION_8921:
-			rc = pm8xxx_readb(chip->dev->parent, addr, value);
-			if (rc) {
-				pr_err("pm8xxx_readb(0x%03X) failed, rc=%d\n",
-								addr, rc);
-				break;
-			}
-		default:
-			break;
-		}
-	}
-
-	spin_unlock_irqrestore(&pm8xxx_misc_chips_lock, flags);
-
-	return rc;
-}
-EXPORT_SYMBOL_GPL(pm8xxx_read_register);
-
 /*
  * Set an SMPS regulator to be disabled in its CTRL register, but enabled
  * in the master enable register.  Also set it's pull down enable bit.
@@ -1308,7 +1273,7 @@ static int __devexit pm8xxx_misc_remove(struct platform_device *pdev)
 }
 
 static struct platform_driver pm8xxx_misc_driver = {
-	.probe	= pm8xxx_misc_probe,
+	.probe	= p m8xxx_misc_probe,
 	.remove	= __devexit_p(pm8xxx_misc_remove),
 	.driver	= {
 		.name	= PM8XXX_MISC_DEV_NAME,
