@@ -1273,7 +1273,7 @@ static int __devexit pm8xxx_misc_remove(struct platform_device *pdev)
 }
 
 static struct platform_driver pm8xxx_misc_driver = {
-	.probe	= p m8xxx_misc_probe,
+	.probe	= pm8xxx_misc_probe,
 	.remove	= __devexit_p(pm8xxx_misc_remove),
 	.driver	= {
 		.name	= PM8XXX_MISC_DEV_NAME,
