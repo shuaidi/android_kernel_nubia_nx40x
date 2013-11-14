@@ -318,6 +318,13 @@ static int msm_ctrl_cmd_done(void *arg)
 		goto ctrl_cmd_done_error;
 	}
 
+	if(command->queue_idx < 0 ||
+		command->queue_idx >= MAX_NUM_ACTIVE_CAMERA) {
+		pr_err("%s: Invalid value OR index %d\n", __func__,
+		  command->queue_idx);
+		goto ctrl_cmd_done_error;
+	}
+
 	if (!g_server_dev.server_queue[command->queue_idx].queue_active) {
 		pr_err("%s: Invalid queue\n", __func__);
 		goto ctrl_cmd_done_error;
