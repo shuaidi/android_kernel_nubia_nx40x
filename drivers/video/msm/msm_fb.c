@@ -2187,24 +2187,9 @@ static int msm_fb_pan_display_sub(struct fb_var_screeninfo *var,
 
 	up(&msm_fb_pan_sem);
 
-	if (unset_bl_level && !bl_updated) {
-		pdata = (struct msm_fb_panel_data *)mfd->pdev->
-			dev.platform_data;
-		if ((pdata) && (pdata->set_backlight)) {
-			down(&mfd->sem);
-			mfd->bl_level = unset_bl_level;
-#ifdef CONFIG_ZTEMT_LCD_8064_COMMON
-			mdelay(50);
-#endif //added by cong.shan 20130408
-#ifdef CONFIG_ZTEMT_LCD_CMD_MODE
-#else
-			pdata->set_backlight(mfd);
-#endif
-			bl_level_old = unset_bl_level;
-			up(&mfd->sem);
-			bl_updated = 1;
-		}
-	}
+	if (!bl_updated)
+		schedule_delayed_work(&mfd->backlight_worker,
+					backlight_duration);
 
 	if (info->node == 0 && (mfd->cont_splash_done)) /* primary */
 		mdp_free_splash_buffer(mfd);
