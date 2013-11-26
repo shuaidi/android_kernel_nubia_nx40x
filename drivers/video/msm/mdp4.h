@@ -31,20 +31,6 @@ extern spinlock_t dsi_clk_lock;
 extern u32 mdp_max_clk;
 
 extern u64 mdp_max_bw;
-//added by congshan 20130327 start
-#if defined(CONFIG_ZTEMT_LCD_V5)//||defined(CONFIG_ZTEMT_LCD_Z5MINI)
-#define MDP4_BW_AB_FACTOR (205)	/* 1.15 */
-#define MDP4_BW_IB_FACTOR (215)	/* 1.25 */
-#elif defined(CONFIG_ZTEMT_LCD_Z5MINI)
-#define MDP4_BW_AB_FACTOR (205)	/* 1.15 */
-#define MDP4_BW_IB_FACTOR (215)	/* 1.25 */
-#else
-#define MDP4_BW_AB_FACTOR (115)	/* 1.15 */
-#define MDP4_BW_IB_FACTOR (125)	/* 1.25 */
-
-#endif
-//added by congshan 20130327 end
-
 extern u32 mdp_bw_ab_factor;
 extern u32 mdp_bw_ib_factor;
 extern u32 mdp_iommu_max_map_size;

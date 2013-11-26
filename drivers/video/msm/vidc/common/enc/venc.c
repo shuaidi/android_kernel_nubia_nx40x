@@ -1726,8 +1726,6 @@ static long vid_enc_ioctl(struct file *file,
 		u32 metabuffer_mode = 0, vcd_status = 0;
 		struct vcd_property_hdr vcd_property_hdr;
 		struct vcd_property_live live_mode;
-		memset((void *)&live_mode, 0,
-				sizeof(struct vcd_property_live));
 
 		if (copy_from_user(&venc_msg, arg, sizeof(venc_msg)))
 			return -EFAULT;
@@ -1792,10 +1790,10 @@ static long vid_enc_ioctl(struct file *file,
 	{
 		struct vcd_property_hdr vcd_property_hdr;
 		struct vcd_property_sps_pps_for_idr_enable idr_enable;
-		u32 vcd_status = VCD_ERR_FAIL;
-		u32 enabled = 1;
 		memset((void *)&idr_enable, 0,
 				sizeof(struct vcd_property_sps_pps_for_idr_enable));
+		u32 vcd_status = VCD_ERR_FAIL;
+		u32 enabled = 1;
 
 		if (copy_from_user(&venc_msg, arg, sizeof(venc_msg)))
 			return -EFAULT;

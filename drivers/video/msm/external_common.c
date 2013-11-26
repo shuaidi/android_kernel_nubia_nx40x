@@ -220,10 +220,10 @@ static ssize_t hdmi_common_rda_edid_modes(struct device *dev,
 			.num_of_elements; ++i) {
 			if (ret > 0)
 				ret += scnprintf(buf+ret, PAGE_SIZE-ret, ",%d",
-					*video_mode++ );
+					*video_mode++);
 			else
 				ret += scnprintf(buf+ret, PAGE_SIZE-ret, "%d",
-					*video_mode++ );
+					*video_mode++);
 		}
 	#endif
 	} else

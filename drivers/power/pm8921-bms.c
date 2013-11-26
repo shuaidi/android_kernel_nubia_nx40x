@@ -2514,7 +2514,6 @@ static int report_state_of_charge(struct pm8921_bms_chip *chip)
 	if (last_soc != -EINVAL && last_soc < soc)
 		soc = scale_soc_while_chg(chip, delta_time_us, soc, last_soc);
 
-	/* restrict soc to 1% change */
 	if (last_soc != -EINVAL) {
 		if (chip->first_report_after_suspend) {
 			chip->first_report_after_suspend = false;
