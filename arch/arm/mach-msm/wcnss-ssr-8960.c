@@ -52,8 +52,6 @@ static void smsm_state_cb_hdlr(void *data, uint32_t old_state,
 
 	wcnss_riva_dump_pmic_regs();
 
-	wcnss_riva_dump_pmic_regs();
-
 	if (!(new_state & SMSM_RESET))
 		return;
 
