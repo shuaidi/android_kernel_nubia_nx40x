@@ -2089,128 +2089,113 @@ static int msm_fb_pan_display(struct fb_var_screeninfo *var,
 }
 
 static int msm_fb_pan_display_sub(struct fb_var_screeninfo *var,
-			      struct fb_info *info)
+                              struct fb_info *info)
 {
-	struct mdp_dirty_region dirty;
-	struct mdp_dirty_region *dirtyPtr = NULL;
-	struct msm_fb_data_type *mfd = (struct msm_fb_data_type *)info->par;
+        struct mdp_dirty_region dirty;
+        struct mdp_dirty_region *dirtyPtr = NULL;
+        struct msm_fb_data_type *mfd = (struct msm_fb_data_type *)info->par;
 
-	/*
-	 * If framebuffer is 2, io pen display is not allowed.
-	 */
-	if (bf_supported && info->node == 2) {
-		pr_err("%s: no pan display for fb%d!",
-		       __func__, info->node);
-		return -EPERM;
-	}
+        /*
+         * If framebuffer is 2, io pen display is not allowed.
+         */
+        if (bf_supported && info->node == 2) {
+                pr_err("%s: no pan display for fb%d!",
+                       __func__, info->node);
+                return -EPERM;
+        }
 
-	if (info->node != 0 || mfd->cont_splash_done)	/* primary */
-		if ((!mfd->op_enable) || (!mfd->panel_power_on))
-			return -EPERM;
+        if (info->node != 0 || mfd->cont_splash_done)        /* primary */
+                if ((!mfd->op_enable) || (!mfd->panel_power_on))
+                        return -EPERM;
 
-	if (var->xoffset > (info->var.xres_virtual - info->var.xres))
-		return -EINVAL;
+        if (var->xoffset > (info->var.xres_virtual - info->var.xres))
+                return -EINVAL;
 
-	if (var->yoffset > (info->var.yres_virtual - info->var.yres))
-		return -EINVAL;
+        if (var->yoffset > (info->var.yres_virtual - info->var.yres))
+                return -EINVAL;
 
-	if (info->fix.xpanstep)
-		info->var.xoffset =
-		    (var->xoffset / info->fix.xpanstep) * info->fix.xpanstep;
+        if (info->fix.xpanstep)
+                info->var.xoffset =
+                    (var->xoffset / info->fix.xpanstep) * info->fix.xpanstep;
 
-	if (info->fix.ypanstep)
-		info->var.yoffset =
-		    (var->yoffset / info->fix.ypanstep) * info->fix.ypanstep;
+        if (info->fix.ypanstep)
+                info->var.yoffset =
+                    (var->yoffset / info->fix.ypanstep) * info->fix.ypanstep;
 
-	/* "UPDT" */
-	if (var->reserved[0] == 0x54445055) {
+        /* "UPDT" */
+        if (var->reserved[0] == 0x54445055) {
 
-		dirty.xoffset = var->reserved[1] & 0xffff;
-		dirty.yoffset = (var->reserved[1] >> 16) & 0xffff;
+                dirty.xoffset = var->reserved[1] & 0xffff;
+                dirty.yoffset = (var->reserved[1] >> 16) & 0xffff;
 
-		if ((var->reserved[2] & 0xffff) <= dirty.xoffset)
-			return -EINVAL;
-		if (((var->reserved[2] >> 16) & 0xffff) <= dirty.yoffset)
-			return -EINVAL;
+                if ((var->reserved[2] & 0xffff) <= dirty.xoffset)
+                        return -EINVAL;
+                if (((var->reserved[2] >> 16) & 0xffff) <= dirty.yoffset)
+                        return -EINVAL;
 
-		dirty.width = (var->reserved[2] & 0xffff) - dirty.xoffset;
-		dirty.height =
-		    ((var->reserved[2] >> 16) & 0xffff) - dirty.yoffset;
-		info->var.yoffset = var->yoffset;
+                dirty.width = (var->reserved[2] & 0xffff) - dirty.xoffset;
+                dirty.height =
+                    ((var->reserved[2] >> 16) & 0xffff) - dirty.yoffset;
+                info->var.yoffset = var->yoffset;
 
-		if (dirty.xoffset < 0)
-			return -EINVAL;
+                if (dirty.xoffset < 0)
+                        return -EINVAL;
 
-		if (dirty.yoffset < 0)
-			return -EINVAL;
+                if (dirty.yoffset < 0)
+                        return -EINVAL;
 
-		if ((dirty.xoffset + dirty.width) > info->var.xres)
-			return -EINVAL;
+                if ((dirty.xoffset + dirty.width) > info->var.xres)
+                        return -EINVAL;
 
-		if ((dirty.yoffset + dirty.height) > info->var.yres)
-			return -EINVAL;
+                if ((dirty.yoffset + dirty.height) > info->var.yres)
+                        return -EINVAL;
 
-		if ((dirty.width <= 0) || (dirty.height <= 0))
-			return -EINVAL;
+                if ((dirty.width <= 0) || (dirty.height <= 0))
+                        return -EINVAL;
 
-		dirtyPtr = &dirty;
-	}
-	complete(&mfd->msmfb_update_notify);
-	mutex_lock(&msm_fb_notify_update_sem);
-	if (mfd->msmfb_no_update_notify_timer.function)
-		del_timer(&mfd->msmfb_no_update_notify_timer);
+                dirtyPtr = &dirty;
+        }
+        complete(&mfd->msmfb_update_notify);
+        mutex_lock(&msm_fb_notify_update_sem);
+        if (mfd->msmfb_no_update_notify_timer.function)
+                del_timer(&mfd->msmfb_no_update_notify_timer);
 
-	mfd->msmfb_no_update_notify_timer.expires = jiffies + (2 * HZ);
-	add_timer(&mfd->msmfb_no_update_notify_timer);
-	mutex_unlock(&msm_fb_notify_update_sem);
+        mfd->msmfb_no_update_notify_timer.expires = jiffies + (2 * HZ);
+        add_timer(&mfd->msmfb_no_update_notify_timer);
+        mutex_unlock(&msm_fb_notify_update_sem);
 
-	down(&msm_fb_pan_sem);
-	msm_fb_wait_for_fence(mfd);
-	if (info->node == 0 && !(mfd->cont_splash_done)) { /* primary */
-		mdp_set_dma_pan_info(info, NULL, TRUE);
-		if (msm_fb_blank_sub(FB_BLANK_UNBLANK, info, mfd->op_enable)) {
-			pr_err("%s: can't turn on display!\n", __func__);
-			up(&msm_fb_pan_sem);
-			msm_fb_release_timeline(mfd);
-			return -EINVAL;
-		}
-	}
+        down(&msm_fb_pan_sem);
+        msm_fb_wait_for_fence(mfd);
+        if (info->node == 0 && !(mfd->cont_splash_done)) { /* primary */
+                mdp_set_dma_pan_info(info, NULL, TRUE);
+                if (msm_fb_blank_sub(FB_BLANK_UNBLANK, info, mfd->op_enable)) {
+                        pr_err("%s: can't turn on display!\n", __func__);
+                        up(&msm_fb_pan_sem);
+                        msm_fb_release_timeline(mfd);
+                        return -EINVAL;
+                }
+        }
 
-	mdp_set_dma_pan_info(info, dirtyPtr,
-			     (var->activate & FB_ACTIVATE_VBL));
-	/* async call */
+        mdp_set_dma_pan_info(info, dirtyPtr,
+                             (var->activate & FB_ACTIVATE_VBL));
+        /* async call */
 
-	mdp_dma_pan_update(info);
-	msm_fb_signal_timeline(mfd);
-	if (mdp4_unmap_sec_resource(mfd))
-		pr_err("%s: unmap secure res failed\n", __func__);
+        mdp_dma_pan_update(info);
+        msm_fb_signal_timeline(mfd);
+        if (mdp4_unmap_sec_resource(mfd))
+                pr_err("%s: unmap secure res failed\n", __func__);
 
-	up(&msm_fb_pan_sem);
+        up(&msm_fb_pan_sem);
 
-	if (unset_bl_level && !bl_updated) {
-		pdata = (struct msm_fb_panel_data *)mfd->pdev->
-			dev.platform_data;
-		if ((pdata) && (pdata->set_backlight)) {
-			down(&mfd->sem);
-			mfd->bl_level = unset_bl_level;
-#ifdef CONFIG_ZTEMT_LCD_8064_COMMON
-			mdelay(50);
-#endif //added by cong.shan 20130408
-#ifdef CONFIG_ZTEMT_LCD_CMD_MODE
-#else
-			pdata->set_backlight(mfd);
-#endif
-			bl_level_old = unset_bl_level;
-			up(&mfd->sem);
-			bl_updated = 1;
-		}
-	}
+        if (!bl_updated)
+                schedule_delayed_work(&mfd->backlight_worker,
+                                        backlight_duration);
 
-	if (info->node == 0 && (mfd->cont_splash_done)) /* primary */
-		mdp_free_splash_buffer(mfd);
+        if (info->node == 0 && (mfd->cont_splash_done)) /* primary */
+                mdp_free_splash_buffer(mfd);
 
-	++mfd->panel_info.frame_count;
-	return 0;
+        ++mfd->panel_info.frame_count;
+        return 0;
 }
 
 static void msm_fb_commit_wq_handler(struct work_struct *work)
