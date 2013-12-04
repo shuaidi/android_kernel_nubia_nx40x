@@ -2730,11 +2730,8 @@ int msm_server_send_ctrl(struct msm_ctrl_cmd *out,
 		msecs_to_jiffies(out->timeout_ms));
 	D("Waiting is over for config status\n");
 	if (list_empty_careful(&queue->list)) {
-		if (!rc) {
+		if (!rc)
 			rc = -ETIMEDOUT;
-			msm_drain_eventq(
-			&server_dev->server_queue[out->queue_idx].eventData_q);
-		}
 		if (rc < 0) {
 			if (++server_dev->server_evt_id == 0)
 				server_dev->server_evt_id++;
