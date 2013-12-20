@@ -2038,7 +2038,7 @@ static int msm_fb_pan_display(struct fb_var_screeninfo *var,
 }
 
 static int msm_fb_pan_display_sub(struct fb_var_screeninfo *var,
-                              struct fb_info *info)
+			      struct fb_info *info)
 {
 	struct mdp_dirty_region dirty;
 	struct mdp_dirty_region *dirtyPtr = NULL;
